@@ -41,6 +41,24 @@ resource "aws_instance" "instance" {
   key_name               = "admin-key"
   vpc_security_group_ids = [aws_security_group.ec2_access.id]
 
+  connection {
+    user    = "ec2-user"
+    host    = self.public_ip
+    agent   = true
+    timeout = "1m"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+      "sudo amazon-linux-extras install docker -y",
+      "sudo service docker start",
+      "sudo usermod -a -G docker ec2-user",  # Allow the ec2-user to use Docker without sudo
+      "sudo systemctl enable docker"  # Start Docker on boot
+    ]
+  }
+
+
   lifecycle {
     create_before_destroy = false
   }
